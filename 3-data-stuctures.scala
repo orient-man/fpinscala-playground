@@ -103,5 +103,52 @@ object MyModule {
       case (_, Nil) => Nil
       case (Cons(ha, ta), Cons(hb, tb)) => Cons(f(ha, hb), zipWith(ta, tb)(f))
     }
+
+    @annotation.tailrec
+    def startsWith[A](sup: List[A], sub: List[A]): Boolean = (sup, sub) match {
+      case (_, Nil) => true
+      case (Cons(h1, t1), Cons(h2, t2)) if h1 == h2 => startsWith(t1, t2)
+      case _ => false
+    }
+
+    @annotation.tailrec
+    def hasSubsequence[A](sup: List[A], sub: List[A]): Boolean = sup match {
+      case Nil => false
+      case _ if (startsWith(sup, sub)) => true
+      case Cons(_, tail) => hasSubsequence(tail, sub)
+    }
+  }
+
+  sealed trait Tree[+A]
+  case class Leaf[A](value: A) extends Tree[A]
+  case class Branch[A](left: Tree[A], right: Tree[A]) extends Tree[A]
+
+  object Tree {
+    def size[A](t: Tree[A]): Int = t match {
+      case Leaf(_) => 1
+      case Branch(left, right) => size(left) + size(right) + 1
+    }
+
+    def maximum(t: Tree[Int]): Int = t match {
+      case Leaf(x) => x
+      case Branch(left, right) => maximum(left).max(maximum(right))
+    }
+
+    def depth[A](t: Tree[A]): Int = t match {
+      case Leaf(_) => 0
+      case Branch(left, right) => depth(left).max(depth(right)) + 1
+    }
+
+    def map[A,B](t: Tree[A])(f: A => B): Tree[B] = t match {
+      case Leaf(a) => Leaf(f(a))
+      case Branch(left, right) => Branch(map(left)(f), map(right)(f))
+    }
+
+    def fold[A,B](t: Tree[A], z: B)(f: (A, B) => B): B = t match {
+      case Leaf(a) => f(a, z)
+      case Branch(left, right) => fold(right, fold(left, z)(f))(f)
+    }
+
+    def size2[A](t: Tree[A]): Int = fold(t, 0)((_, n) => n + 1)
   }
 }
