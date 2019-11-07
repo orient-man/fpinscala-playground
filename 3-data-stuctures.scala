@@ -149,6 +149,21 @@ object MyModule {
       case Branch(left, right) => fold(right, fold(left, z)(f))(f)
     }
 
+    // not working - imposible?
     def size2[A](t: Tree[A]): Int = fold(t, 0)((_, n) => n + 1)
+
+    def maximum2(t: Tree[Int]): Int = fold(t, Int.MinValue)(_.max(_))
+  }
+
+  sealed trait Tree2[+A,+B]
+  case class Leaf2[A,B](value: A) extends Tree2[A,B]
+  case class Branch2[A,B](left: Tree2[A,B], value: B, right: Tree2[A,B]) extends Tree2[A,B]
+
+  object Tree2 {
+    // e.g. Tree2.fold(Branch2(Branch2(Leaf2(1), 2, Leaf2(3)), 4, Leaf2(5)), 0)(_ + _)(_ + _)
+    def fold[A,B,C](t: Tree2[A,B], c: C)(fl: (A, C) => C)(fb: (B, C) => C): C = t match {
+      case Leaf2(a) => fl(a, c)
+      case Branch2(left, b, right) => fold(right, fold(left, fb(b, c))(fl)(fb))(fl)(fb)
+    }
   }
 }
